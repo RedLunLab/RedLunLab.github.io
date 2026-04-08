@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RedLun Lab — Бэкенд и разработка приложений для Битрикс24</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --red: #cc2200;
+      --red-bright: #ff3311;
+      --red-dim: #881500;
+      --black: #080808;
+      --dark: #111111;
+      --card: #161616;
+      --border: #2a1a18;
+      --text: #f0ebe9;
+      --muted: #8a7a77;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: var(--sans);
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 3rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--red-bright); }
+
+    nav a.nav-link {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+
+    nav a.nav-link:hover { color: var(--red-bright); }
+
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+
+    .nav-cta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.5rem 1.1rem;
+      border: 1px solid var(--red);
+      color: var(--red-bright);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+    }
+
+    .nav-cta:hover {
+      background: var(--red);
+      color: var(--text);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 3rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 50%, rgba(180,20,0,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 60% at 20% 80%, rgba(120,10,0,0.08) 0%, transparent 60%);
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(204,34,0,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(204,34,0,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    }
+
+    .hero-content {
+      position: relative;
+      max-width: 900px;
+    }
+
+    .hero-tag {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--red-bright);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    .hero-tag::before {
+      content: '';
+      width: 2rem;
+      height: 1px;
+      background: var(--red-bright);
+    }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+
+    h1 .accent { color: var(--red-bright); }
+
+    h1 .dim {
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 0.55em;
+      display: block;
+      margin-top: 0.3em;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-desc {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 540px;
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s forwards;
+    }
+
+    .hero-desc .hl { color: var(--text); }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s forwards;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      background: var(--red);
+      color: var(--text);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--red-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--red);
+      color: var(--text);
+      transform: translateY(-2px);
+    }
+
+    /* ── STATS ROW ── */
+    .stats {
+      position: absolute;
+      bottom: 3rem;
+      right: 3rem;
+      display: flex;
+      gap: 3rem;
+      opacity: 0;
+      animation: fadeIn 1s 1.2s forwards;
+    }
+
+    .stat-item { text-align: right; }
+
+    .stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--red-bright);
+      display: block;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* ── SECTION BASE ── */
+    section {
+      padding: 6rem 3rem;
+    }
+
+    .section-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--red-bright);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-tag::before {
+      content: '';
+      width: 1.5rem;
+      height: 1px;
+      background: var(--red-bright);
+    }
+
+    h2 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .section-sub {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 480px;
+      margin-bottom: 3.5rem;
+    }
+
+    /* ── SERVICES ── */
+    .services { background: var(--dark); }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1px;
+      border: 1px solid var(--border);
+    }
+
+    .service-card {
+      background: var(--card);
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 0;
+      background: var(--red-bright);
+      transition: height 0.4s;
+    }
+
+    .service-card:hover { background: #1a1515; }
+    .service-card:hover::before { height: 100%; }
+
+    .service-num {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--red-dim);
+      letter-spacing: 0.1em;
+      margin-bottom: 1.5rem;
+    }
+
+    .service-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .service-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .service-desc {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .service-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 1.5rem;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── STACK ── */
+    .stack-section { background: var(--black); }
+
+    .stack-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1px;
+      border: 1px solid var(--border);
+      margin-top: 0;
+    }
+
+    .stack-item {
+      background: var(--card);
+      padding: 1.5rem 1.2rem;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .stack-item:hover { background: #1d1515; }
+
+    .stack-icon { font-size: 1.6rem; display: block; margin-bottom: 0.6rem; }
+
+    .stack-name {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── ABOUT ── */
+    .about { background: var(--dark); }
+
+    .about-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .about-visual {
+      position: relative;
+      height: 400px;
+    }
+
+    .about-box {
+      position: absolute;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .about-box-main {
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      font-weight: 800;
+      color: var(--red);
+      letter-spacing: -0.04em;
+      overflow: hidden;
+    }
+
+    .about-box-main::after {
+      content: 'RL';
+      position: absolute;
+      font-size: 12rem;
+      color: rgba(204,34,0,0.05);
+      letter-spacing: -0.06em;
+      font-weight: 800;
+    }
+
+    .about-box-accent {
+      width: 120px;
+      height: 80px;
+      bottom: -20px;
+      right: -20px;
+      background: var(--red);
+      border: none;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .about-box-accent span {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--text);
+      letter-spacing: 0.1em;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .about-text h2 { margin-bottom: 1.5rem; }
+
+    .about-text p {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.9;
+      margin-bottom: 1.2rem;
+    }
+
+    .about-text p .hl { color: var(--text); }
+
+    /* ── CONTACT ── */
+    .contact { background: var(--black); }
+
+    .contact-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-top: 2rem;
+    }
+
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+      group: true;
+    }
+
+    .contact-link:hover {
+      border-color: var(--red);
+      background: #1a1515;
+      transform: translateX(4px);
+    }
+
+    .contact-link-icon {
+      font-size: 1.2rem;
+      width: 2.5rem;
+      text-align: center;
+    }
+
+    .contact-link-info { flex: 1; }
+
+    .contact-link-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .contact-link-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .contact-link-arrow {
+      color: var(--red);
+      font-size: 1.1rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .contact-link:hover .contact-link-arrow { opacity: 1; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 2rem 3rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-logo {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    .footer-logo span { color: var(--red-bright); }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    /* ── CURSOR LINE ── */
+    .cursor-line {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--red-bright);
+      margin-left: 4px;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1rem; }
+      section { padding: 4rem 1.5rem; }
+      .hero { padding: 7rem 1.5rem 6rem; }
+      h1 { font-size: 3rem; }
+      .stats { position: static; margin-top: 3rem; justify-content: flex-start; }
+      .about-inner, .contact-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .about-visual { height: 280px; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo"><span>Red</span>Lun Lab</a>
+    <div class="nav-links">
+      <a href="#services" class="nav-link">УСЛУГИ</a>
+      <a href="#stack" class="nav-link">СТЕК</a>
+      <a href="#about" class="nav-link">О НАС</a>
+      <a href="#contact" class="nav-cta">СВЯЗАТЬСЯ</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-tag">ФУЛЛСТАК · БЭКЕНД · БИТРИКС24</div>
+      <h1>
+        <span class="accent">Код</span>, который<br>
+        работает.<span class="cursor-line"></span>
+        <span class="dim">Бэкенд. Интеграции. Приложения для Битрикс24.</span>
+      </h1>
+      <p class="hero-desc">
+        Разрабатываем <span class="hl">REST-приложения</span> для маркетплейса Битрикс24,
+        создаём надёжные <span class="hl">PHP/Symfony бэкенды</span> и связываем
+        системы, которым нужно взаимодействовать — чисто, надёжно, без лишних проблем.
+      </p>
+      <div class="hero-actions">
+        <a href="#services" class="btn-primary">Что мы делаем</a>
+        <a href="#contact" class="btn-ghost">Связаться</a>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-num">Б24</span>
+        <span class="stat-label">Маркетплейс</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">PHP</span>
+        <span class="stat-label">Symfony</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">REST</span>
+        <span class="stat-label">API First</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services" id="services">
+    <div class="section-tag">Что мы создаём</div>
+    <h2>Услуги</h2>
+    <p class="section-sub">От приложений для маркетплейса Битрикс24 до кастомных бэкенд-систем — мы охватываем весь спектр серверной разработки.</p>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-num">01</div>
+        <div class="service-icon">⚙️</div>
+        <div class="service-title">Приложения для Битрикс24</div>
+        <p class="service-desc">Тиражные решения для маркетплейса Битрикс24. Интеграции через REST API, коннекторы открытых линий, автоматизация CRM и смарт-процессы.</p>
+        <div class="service-tags">
+          <span class="tag">REST API</span>
+          <span class="tag">Вебхуки</span>
+          <span class="tag">CRM</span>
+          <span class="tag">Открытые линии</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">02</div>
+        <div class="service-icon">🔗</div>
+        <div class="service-title">Системные интеграции</div>
+        <p class="service-desc">Подключаем Битрикс24 к платёжным системам, мессенджерам, ERP, e-commerce платформам и любым сторонним сервисам с API.</p>
+        <div class="service-tags">
+          <span class="tag">Payme</span>
+          <span class="tag">Click</span>
+          <span class="tag">Telegram</span>
+          <span class="tag">Вебхуки</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">03</div>
+        <div class="service-icon">🛠</div>
+        <div class="service-title">Бэкенд разработка</div>
+        <p class="service-desc">Надёжные бэкенды на PHP/Symfony. Чистая архитектура, грамотное проектирование API, устойчивая инфраструктура для продуктов, которым нужно расти.</p>
+        <div class="service-tags">
+          <span class="tag">PHP 8</span>
+          <span class="tag">Symfony</span>
+          <span class="tag">MySQL</span>
+          <span class="tag">Redis</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-num">04</div>
+        <div class="service-icon">🤖</div>
+        <div class="service-title">Автоматизация CRM</div>
+        <p class="service-desc">Роботы, триггеры, бизнес-процессы и умные сценарии, которые убирают рутину и держат воронку продаж в движении.</p>
+        <div class="service-tags">
+          <span class="tag">Роботы</span>
+          <span class="tag">Триггеры</span>
+          <span class="tag">БП</span>
+          <span class="tag">Смарт CRM</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section class="stack-section" id="stack">
+    <div class="section-tag">Технологии</div>
+    <h2>Стек</h2>
+    <p class="section-sub">Проверенные инструменты, выбранные за надёжность и производительность.</p>
+    <div class="stack-list">
+      <div class="stack-item"><span class="stack-icon">🐘</span><span class="stack-name">PHP 8</span></div>
+      <div class="stack-item"><span class="stack-icon">🎼</span><span class="stack-name">Symfony</span></div>
+      <div class="stack-item"><span class="stack-icon">🐬</span><span class="stack-name">MySQL</span></div>
+      <div class="stack-item"><span class="stack-icon">🔴</span><span class="stack-name">Redis</span></div>
+      <div class="stack-item"><span class="stack-icon">🐳</span><span class="stack-name">Docker</span></div>
+      <div class="stack-item"><span class="stack-icon">⚡</span><span class="stack-name">REST API</span></div>
+      <div class="stack-item"><span class="stack-icon">🔷</span><span class="stack-name">Bitrix24</span></div>
+      <div class="stack-item"><span class="stack-icon">📦</span><span class="stack-name">Composer</span></div>
+      <div class="stack-item"><span class="stack-icon">🐙</span><span class="stack-name">Git</span></div>
+      <div class="stack-item"><span class="stack-icon">🔒</span><span class="stack-name">OAuth 2.0</span></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="about-inner">
+      <div class="about-visual">
+        <div class="about-box about-box-main">
+          <span style="position:relative;z-index:1;color:var(--red-bright);">RL</span>
+        </div>
+        <div class="about-box about-box-accent">
+          <span>ТАШКЕНТ<br>УЗБЕКИСТАН</span>
+        </div>
+      </div>
+      <div class="about-text">
+        <div class="section-tag">Кто мы</div>
+        <h2>RedLun Lab</h2>
+        <p>
+          Независимая software-лаборатория, специализирующаяся на <span class="hl">разработке в экосистеме Битрикс24</span> и бэкенд-инжиниринге. Базируемся в Ташкенте, работаем по всему миру.
+        </p>
+        <p>
+          Специализируемся на создании <span class="hl">тиражных приложений</span> для маркетплейса Битрикс24 — интеграции, инструменты автоматизации и региональные решения для бизнеса Центральной Азии, которым нужна CRM, реально работающая с местными платёжными системами и сервисами.
+        </p>
+        <p>
+          <span class="hl">RedLun</span> — энергия красного дракона, точность лаборатории. Мы пишем код, который выдерживает нагрузку.
+        </p>
+        <a href="#contact" class="btn-primary" style="margin-top:1rem;">Работать с нами</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <div class="contact-inner">
+      <div>
+        <div class="section-tag">Связаться</div>
+        <h2>Давайте<br>построим что-то.</h2>
+        <p class="section-sub">Есть проект на Битрикс24, задача по бэкенду или просто хотите поговорить об интеграциях? Напишите нам.</p>
+      </div>
+      <div>
+        <div class="contact-links">
+          <a href="mailto:redlun.lab@gmail.com" class="contact-link">
+            <div class="contact-link-icon">✉️</div>
+            <div class="contact-link-info">
+              <div class="contact-link-label">Почта</div>
+              <div class="contact-link-value">redlun.lab@gmail.com</div>
+            </div>
+            <div class="contact-link-arrow">→</div>
+          </a>
+          <a href="https://t.me/IrbisPonyashka" target="_blank" class="contact-link">
+            <div class="contact-link-icon">✈️</div>
+            <div class="contact-link-info">
+              <div class="contact-link-label">Telegram</div>
+              <div class="contact-link-value">@IrbisPonyashka</div>
+            </div>
+            <div class="contact-link-arrow">→</div>
+          </a>
+          <a href="https://github.com/RedLoonLab" target="_blank" class="contact-link">
+            <div class="contact-link-icon">🐙</div>
+            <div class="contact-link-info">
+              <div class="contact-link-label">GitHub</div>
+              <div class="contact-link-value">github.com/RedLoonLab</div>
+            </div>
+            <div class="contact-link-arrow">→</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo"><span>Red</span>Lun Lab</div>
+    <p>© 2025 RedLun Lab · Ташкент, Узбекистан</p>
+    <p style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);">PHP · Symfony · Bitrix24</p>
+  </footer>
+
+</body>
+</html>
